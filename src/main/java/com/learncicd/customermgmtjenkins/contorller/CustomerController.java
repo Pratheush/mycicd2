@@ -1,7 +1,8 @@
-package com.learncicd.customermgmt.contorller;
+package com.learncicd.customermgmtjenkins.contorller;
 
-import com.learncicd.customermgmt.domain.Customer;
-import com.learncicd.customermgmt.service.CustomerService;
+
+import com.learncicd.customermgmtjenkins.domain.Customer;
+import com.learncicd.customermgmtjenkins.service.CustomerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 

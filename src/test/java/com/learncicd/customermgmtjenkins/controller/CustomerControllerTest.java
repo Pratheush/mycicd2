@@ -1,9 +1,9 @@
-package com.learncicd.customermgmt.controller;
+package com.learncicd.customermgmtjenkins.controller;
 
-import com.learncicd.customermgmt.contorller.CustomerController;
-import com.learncicd.customermgmt.domain.Customer;
-import com.learncicd.customermgmt.exception.CustomerNotFoundException;
-import com.learncicd.customermgmt.service.CustomerService;
+import com.learncicd.customermgmtjenkins.contorller.CustomerController;
+import com.learncicd.customermgmtjenkins.domain.Customer;
+import com.learncicd.customermgmtjenkins.exception.CustomerNotFoundException;
+import com.learncicd.customermgmtjenkins.service.CustomerService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
