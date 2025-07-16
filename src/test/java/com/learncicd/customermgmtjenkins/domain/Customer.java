@@ -1,4 +1,4 @@
-package com.learncicd.customermgmt.domain;
+package com.learncicd.customermgmtjenkins.domain;
 
 import lombok.*;
 

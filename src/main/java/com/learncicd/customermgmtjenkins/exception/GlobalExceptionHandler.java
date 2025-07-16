@@ -1,4 +1,4 @@
-package com.learncicd.customermgmt.exception;
+package com.learncicd.customermgmtjenkins.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

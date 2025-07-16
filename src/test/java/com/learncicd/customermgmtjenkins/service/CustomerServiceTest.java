@@ -1,7 +1,8 @@
-package com.learncicd.customermgmt.service;
+package com.learncicd.customermgmtjenkins.service;
 
-import com.learncicd.customermgmt.domain.Customer;
-import com.learncicd.customermgmt.exception.CustomerNotFoundException;
+
+import com.learncicd.customermgmtjenkins.domain.Customer;
+import com.learncicd.customermgmtjenkins.exception.CustomerNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

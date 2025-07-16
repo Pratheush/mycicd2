@@ -1,4 +1,4 @@
-package com.learncicd.customermgmt.exception;
+package com.learncicd.customermgmtjenkins.exception;
 
 public class CustomerNotFoundException extends RuntimeException {
     public CustomerNotFoundException(String message) {
