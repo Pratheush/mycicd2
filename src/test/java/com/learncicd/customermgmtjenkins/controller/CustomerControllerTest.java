@@ -5,6 +5,7 @@ import com.learncicd.customermgmtjenkins.domain.Customer;
 import com.learncicd.customermgmtjenkins.exception.CustomerNotFoundException;
 import com.learncicd.customermgmtjenkins.service.CustomerService;
 import org.junit.jupiter.api.Test;
+import org.mockito.Answers;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -29,7 +30,8 @@ class CustomerControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockitoBean
+    // use it when you are doing inline mocking
+    @MockitoBean(answers = Answers.RETURNS_MOCKS)
     private CustomerService customerService;
 
     @Test

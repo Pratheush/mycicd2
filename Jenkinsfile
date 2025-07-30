@@ -47,7 +47,7 @@ pipeline {
     // Stage 1: Checkout Source Code 
     stage('Checkout') {
       steps {
-        echo 'Checking out source code...'
+        echo '📦 Checking out source code...'
         // Checkout the SCM (Source Code Management) configured for this job. This typically points to your GitHub repository.
         git branch: 'master', url: 'https://github.com/Pratheush/mycicd2.git'
       }
@@ -56,7 +56,7 @@ pipeline {
     // Stage 2: Build Spring Boot Application
     stage('Build & Test App') {
       steps {
-        echo 'Building Spring Boot application with Maven...'
+        echo '🛠️ Building Spring Boot application with Maven...'
         // Use 'bat' for Windows
         // 'mvn clean package' cleans the target directory and packages the application into a JAR file (typically in the 'target' directory).
         // -DskipTests to skip tests during build, remove if you want tests to run
@@ -70,7 +70,7 @@ pipeline {
     // Stage 3: Build Docker Image 
      stage('Build Docker Image') {
       steps {
-        echo 'Building Docker image...'
+        echo '🐳 Building Docker image...'
         // Build the Docker image.
         // Assumes a Dockerfile exists in the root of your project.
         // .    the current directory where Dockerfile and project file lives
@@ -78,14 +78,17 @@ pipeline {
         // -t     tags the image with the name from the environment variable and gives it the latest tag
         // Uses multi-tag Docker image (short-commit and latest) — good practice.
         script {
-            echo 'Building Docker image INSIDE SCRIPT SECTION'
+          echo 'Building Docker image INSIDE SCRIPT SECTION'
           def shortCommit = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
-          echo 'Building Docker image shortCommit ${shortCommit}'
           def imageTag    = "${DOCKER_IMAGE_NAME}:${shortCommit}"
-          echo 'Building Docker image imageTag ${imageTag}'
           def latestTag   = "${DOCKER_IMAGE_NAME}:latest"
-          echo 'Building Docker image latestTag ${latestTag}'
+
+          echo "🔖 shortCommit: ${shortCommit}"
+          echo "📸 imageTag: ${imageTag}"
+          echo "🆕 latestTag: ${latestTag}"
+          
           sh "docker build -t ${imageTag} -t ${latestTag} ."
+          
           echo ' Docker image BUILT '    
           
           // Save to environment for next stage
@@ -102,32 +105,34 @@ pipeline {
     // Push Docker Image to DockerHub stage using withDockerRegistry {} is more robust and secure for Windows environments:
     // - Cross-platform compatible: No piping issues like you’d face with --password-stdin.
 
-    // stage('Push Docker Image to DockerHub') {
-    //   steps {
-    //     echo 'Pushing Docker image... using withCredentials : usernamePassword Way'
-    //     withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID,
-    //                                       usernameVariable: 'USERNAME',
-    //                                       passwordVariable: 'PASSWORD')]) {
-    //       bat "echo %PASSWORD% | docker login -u %USERNAME% --password-stdin"
-    //       bat "docker push ${env.IMAGE_TAG}"
-    //       bat "docker push ${env.LATEST_TAG}"
-    //     }
-    //     echo "🚀 Docker image ${env.IMAGE_TAG} pushed to DockerHub successfully!"
-    //     echo "✅ Tagged as latest: ${env.LATEST_TAG}"
-    //   }
-    // }
-    
     stage('Push Docker Image to DockerHub') {
       steps {
-        echo '🔐 Logging in to DockerHub using withDockerRegistry...'
-        withDockerRegistry([credentialsId: DOCKER_CREDENTIALS_ID, url: '']) {
-        //sh "docker push ${env.IMAGE_TAG}"
-        sh "docker push ${env.LATEST_TAG}"
+        echo '🚀 Pushing Docker image... using withCredentials : usernamePassword Way'
+        withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID,
+                                          usernameVariable: 'DOCKER_USER',
+                                          passwordVariable: 'DOCKER_PASS')]) {
+            sh """
+               echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
+               docker push ${env.IMAGE_TAG}
+               docker push ${env.LATEST_TAG}
+           """
+        }
+        echo "🚀 Docker image ${env.IMAGE_TAG} pushed to DockerHub successfully!"
+        echo "✅ Tagged as latest: ${env.LATEST_TAG}"
       }
-      echo "🚀 Docker image ${env.IMAGE_TAG} pushed to DockerHub successfully!"
-      echo "✅ Tagged as latest: ${env.LATEST_TAG}"
     }
-   }
+    
+//     stage('Push Docker Image to DockerHub') {
+//       steps {
+//         echo '🔐 Logging in to DockerHub using withDockerRegistry...'
+//         withDockerRegistry([credentialsId: DOCKER_CREDENTIALS_ID, url: '']) {
+//         //sh "docker push ${env.IMAGE_TAG}"
+//         sh "docker push ${env.LATEST_TAG}"
+//       }
+//       echo "🚀 Docker image ${env.IMAGE_TAG} pushed to DockerHub successfully!"
+//       echo "✅ Tagged as latest: ${env.LATEST_TAG}"
+//     }
+//    }
    
    stage('Clean Docker Images (optional)') {
       when {
@@ -138,7 +143,7 @@ pipeline {
         script {
           def status1 = sh(script: "docker rmi ${env.IMAGE_TAG}", returnStatus: true)
           def status2 = sh(script: "docker rmi ${env.LATEST_TAG}", returnStatus: true)
-          echo "Cleanup status: IMAGE_TAG=${status1}, LATEST_TAG=${status2}"
+          echo "🧹 Cleanup status: IMAGE_TAG=${status1}, LATEST_TAG=${status2}"
         }
       }
    }
@@ -161,7 +166,7 @@ pipeline {
       //      body: "Build ${currentBuild.displayName} (${env.BUILD_URL}) finished with status ${currentBuild.currentResult}"
     }
     success {
-      echo 'Pipeline executed successfully.'
+      echo '✅ Pipeline executed successfully.'
       echo '🚀 Docker image successfully built and pushed!'
     }
     failure {
