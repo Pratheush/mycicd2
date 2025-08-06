@@ -93,7 +93,9 @@ pipeline {
           // sh 'mvn verify sonar:sonar -Dsonar.token=$SONAR_TOKEN'
 
           // Tell SonarQube Where to Find the Report Update SonarQube analysis stage like this: 
-          sh 'mvn verify sonar:sonar -Dsonar.token=$SONAR_TOKEN -Dsonar.projectKey=mycicd2 -Dsonar.host.url=http://localhost:9000 -Dsonar.junit.reportPaths=target/surefire-reports,target/failsafe-reports -Dsonar.coverage.jacoco.xmlReportPaths=target/jacoco-report/jacoco.xml'
+          // sh 'mvn verify sonar:sonar -Dsonar.token=$SONAR_TOKEN -Dsonar.projectKey=mycicd2 -Dsonar.host.url=http://localhost:9000 -Dsonar.junit.reportPaths=target/surefire-reports,target/failsafe-reports -Dsonar.coverage.jacoco.xmlReportPaths=target/jacoco-report/jacoco.xml'
+          sh 'mvn sonar:sonar -Dsonar.token=$SONAR_TOKEN -Dsonar.projectKey=customer-mgmt-jenkins-projectKey -Dsonar.projectName=customer-mgmt-jenkins-projectName -Dsonar.projectVersion=1.0 -Dsonar.host.url=http://localhost:9000 -Dsonar.junit.reportPaths=target/surefire-reports,target/failsafe-reports -Dsonar.coverage.jacoco.xmlReportPaths=target/jacoco-report/jacoco.xml'
+
         }
       }
     }
@@ -204,7 +206,9 @@ pipeline {
     always {
 
       junit '**/surefire-reports/*.xml, **/failsafe-reports/*.xml'
-      recordCoverage tools: [jacoco()]
+      // jacoco() is not available method since jacoco plugin is not installed in jenkins as jacoco plugin is depracted
+      //recordCoverage tools: [jacoco()]
+      publishCoverage adapters: [jacocoAdapter('target/jacoco-report/jacoco.xml')], sourceFileResolver: sourceFiles('STORE_LAST_BUILD')
 
       echo "🏁 Cleaning Workspace."
       cleanWs()
