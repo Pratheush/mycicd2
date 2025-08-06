@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Slf4j
-class CustomerMgmtJenkinsApplicationTests {
+class CustomerMgmtJenkinsApplicationIntegrationTest {
 
     @Autowired
     private TestRestTemplate restTemplate;
