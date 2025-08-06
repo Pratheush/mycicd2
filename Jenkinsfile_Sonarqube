@@ -208,7 +208,8 @@ pipeline {
       junit '**/surefire-reports/*.xml, **/failsafe-reports/*.xml'
       // jacoco() is not available method since jacoco plugin is not installed in jenkins as jacoco plugin is depracted
       //recordCoverage tools: [jacoco()]
-      publishCoverage adapters: [jacocoAdapter('target/jacoco-report/jacoco.xml')], sourceFileResolver: sourceFiles('STORE_LAST_BUILD')
+      // publishCoverage adapters: [jacocoAdapter('target/jacoco-report/jacoco.xml')], sourceFileResolver: sourceFiles('STORE_LAST_BUILD')
+      recordCoverage(tools: [[parser: 'JACOCO', pattern: 'target/jacoco-report/jacoco.xml']], sourceDirectories: [[path: 'src/main/java']])
 
       echo "🏁 Cleaning Workspace."
       cleanWs()
