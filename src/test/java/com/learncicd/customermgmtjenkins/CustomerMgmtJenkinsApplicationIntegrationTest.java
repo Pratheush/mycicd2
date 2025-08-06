@@ -20,10 +20,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  *  Use TestRestTemplate for Integration Tests
  * If you're using @SpringBootTest, prefer TestRestTemplate (provided by Spring Boot starter test)
+ * # Run only unit tests
+ * mvn test
+ * # Run only integration tests
+ * mvn failsafe:integration-test failsafe:verify
+ * # Run both unit and integration tests
+ * mvn verify
+ * ✅ mvn verify runs unit tests (surefire) + integration tests (failsafe)
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Slf4j
-class CustomerMgmtJenkinsApplicationTests {
+class CustomerMgmtJenkinsApplicationIntegrationTest {
 
     @Autowired
     private TestRestTemplate restTemplate;

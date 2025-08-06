@@ -85,9 +85,15 @@ pipeline {
         withSonarQubeEnv(installationName: 'sonarqube') {
           echo 'Starting Running STATIC CODE ANALYSIS on SPRINGBOOT APPLICATION....'  
           // Below here Default Sonar configured and specified in Jenkins would be used
-          sh 'mvn sonar:sonar -Dsonar.login=$SONAR_TOKEN'
+          // sh 'mvn verify sonar:sonar -Dsonar.login=$SONAR_TOKEN'
           // Below here specifying which sonar maven version plugin should be used
           //sh 'mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.9.0.2155:sonar -Dsonar.login=$SONAR_TOKEN'
+
+          // as -Dsonar.login has been deprecated we use -Dsonar.token instead
+          // sh 'mvn verify sonar:sonar -Dsonar.token=$SONAR_TOKEN'
+
+          // Tell SonarQube Where to Find the Report Update SonarQube analysis stage like this: 
+          sh 'mvn verify sonar:sonar -Dsonar.token=$SONAR_TOKEN -Dsonar.projectKey=mycicd2 -Dsonar.host.url=http://localhost:9000 -Dsonar.junit.reportPaths=target/surefire-reports,target/failsafe-reports -Dsonar.coverage.jacoco.xmlReportPaths=target/jacoco-report/jacoco.xml'
         }
       }
     }
@@ -196,6 +202,10 @@ pipeline {
   // Define post-build actions, e.g., send notifications. 
   post {
     always {
+
+      junit '**/surefire-reports/*.xml, **/failsafe-reports/*.xml'
+      recordCoverage tools: [jacoco()]
+
       echo "🏁 Cleaning Workspace."
       cleanWs()
       echo "🏁 Pipeline execution finished."
