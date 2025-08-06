@@ -22,6 +22,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Unit Test for CustomerController
  * Use @WebMvcTest to isolate controller logic, mocking the service layer
+ * '@WebMvcTest, @DataJpaTest, and @SpringBootTest' to cover controllers, repositories, and services.
+ * '@MockBean' vs '@MockitoBean'
+ * 🆕 Benefits of '@MockitoBean'
+ * • 	Improved performance: avoids runtime bean creation overhead.
+ * • 	Cleaner integration: aligns better with Spring’s evolving test context.
+ * • 	Future-proof: ensures compatibility with Spring Boot 4.0+.
+ * 📌 Notes
+ * • 	If you're using multiple mocks, '@MockitoBean(types={ServiceA.class, ServiceB.class}) is the new way to replace @MockBean
+ * • 	For spy beans, use . '@MockitoSpyBean'
  */
 
 @WebMvcTest(CustomerController.class)
@@ -31,6 +40,7 @@ class CustomerControllerTest {
     private MockMvc mockMvc;
 
     // use it when you are doing inline mocking
+    // @MockBean is deprecated
     @MockitoBean(answers = Answers.RETURNS_MOCKS)
     private CustomerService customerService;
 
@@ -81,10 +91,10 @@ class CustomerControllerTest {
     @Test
     void testGreetCustomer_NotFound() throws Exception {
         Mockito.when(customerService.getCustomer("Ghost"))
-                .thenThrow(new CustomerNotFoundException("Customer Not FOund With Name : Ghost"));
+                .thenThrow(new CustomerNotFoundException("Customer Not Found With Name : Ghost"));
 
         mockMvc.perform(get("/api/customers/greet?firstName=Ghost"))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("Customer Not FOund With Name : Ghost"));
+                .andExpect(content().string("Customer Not Found With Name : Ghost"));
     }
 }

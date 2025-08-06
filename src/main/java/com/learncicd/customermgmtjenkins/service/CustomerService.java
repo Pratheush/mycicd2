@@ -43,6 +43,6 @@ public class CustomerService {
         return customerList.stream()
                 .filter(customer -> customer.getFirstName().equalsIgnoreCase(firstName))
                 .findFirst()
-                .orElseThrow(() -> new CustomerNotFoundException("Customer Not FOund With Name : "+ firstName));
+                .orElseThrow(() -> new CustomerNotFoundException("Customer Not Found With Name : "+ firstName));
     }
 }

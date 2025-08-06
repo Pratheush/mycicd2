@@ -25,10 +25,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Slf4j
 class CustomerMgmtJenkinsApplicationTests {
 
-    @Test
-    void contextLoads() {
-    }
-
     @Autowired
     private TestRestTemplate restTemplate;
 
@@ -68,8 +64,8 @@ class CustomerMgmtJenkinsApplicationTests {
     void testCustomerNotFound() {
         ResponseEntity<String> response = restTemplate.getForEntity("/api/customers/greet?firstName=Ghost", String.class);
         assertEquals(404, response.getStatusCode().value());
-        assertTrue(Objects.requireNonNull(response.getBody()).contains("Customer Not FOund With Name"));
-        assertTrue(response.getBody().contains("Customer Not FOund With Name"));
+        assertTrue(Objects.requireNonNull(response.getBody()).contains("Customer Not Found With Name"));
+        assertTrue(response.getBody().contains("Customer Not Found With Name"));
     }
 
     @Test

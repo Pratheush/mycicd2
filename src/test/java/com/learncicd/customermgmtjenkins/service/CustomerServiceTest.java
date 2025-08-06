@@ -5,6 +5,7 @@ import com.learncicd.customermgmtjenkins.domain.Customer;
 import com.learncicd.customermgmtjenkins.exception.CustomerNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 
 import java.util.List;
 
@@ -46,10 +47,9 @@ class CustomerServiceTest {
     @Test
     void testGetCustomerByFirstNameNotFound() {
 
-        Exception exception = assertThrows(CustomerNotFoundException.class, () -> {
-            customerService.getCustomer("Ghost");
-        });
-        assertTrue(exception.getMessage().contains("Customer Not FOund With Name"));
+        Executable exec = () -> customerService.getCustomer("Ghost");
+        Exception exception = assertThrows(CustomerNotFoundException.class, exec);
+        assertTrue(exception.getMessage().contains("Customer Not Found With Name"));
     }
 
     /**
