@@ -70,15 +70,15 @@ pipeline {
     stage('Trivy Scan - Filesystem - Maven Dependencies') {
       steps {
         script {
-          echo '🔍 Trivy Scan for Maven Dependencies (Filesystem)...'
+          echo "🔍 Trivy Scan for Maven Dependencies (Filesystem)..."
           // sh 'trivy fs . --exit-code 1 --severity HIGH,CRITICAL'
           // sh 'trivy fs --exit-code 1 --severity HIGH,CRITICAL --vuln-type library .'
 
           // Download HTML template for Trivy report
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl > html.tpl
+          sh "curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl > html.tpl"
 
           // Run Trivy scan and generate HTML report
-          sh 'trivy fs --exit-code 1 --severity HIGH,CRITICAL --vuln-type library --format template --template "@html.tpl" -o trivy-fs-report.html .'
+          sh "trivy fs --exit-code 1 --severity HIGH,CRITICAL --vuln-type library --format template --template \"@html.tpl\" -o trivy-fs-report.html ."
 
           // Publish the report to Jenkins UI
           // 📦 Scans your  and resolved dependencies for known CVEs.
@@ -205,12 +205,12 @@ pipeline {
     stage('Trivy Scan - Docker Image') {
             steps {
               script {
-                echo '🔍 Trivy Scan Docker Image Built For Vulnerabilities...with severity of HIGH/CRITICAL'
+                echo "🔍 Trivy Scan Docker Image Built For Vulnerabilities...with severity of HIGH/CRITICAL"
 
                 // Option 2: Docker (uncomment if using containerized Trivy)
                 // sh 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity HIGH,CRITICAL $FULL_IMAGE'
 
-                curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl > html.tpl
+                sh "curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl > html.tpl"
                 //trivy image --format template --template "@html.tpl" -o report.html $IMAGE_NAME
 
 
