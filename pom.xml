@@ -75,6 +75,15 @@
                 </configuration>
             </plugin>
 
+            <!-- The artifact org.codehaus.mojo:sonar-maven-plugin has been relocated to org.sonarsource.scanner.maven:sonar-maven-plugin -->
+            <!--SonarQube moved the Maven plugin to a new group ID. You're using the correct plugin () org.sonarsource.scanner.maven, but Maven is still resolving the old one first.-->
+            <!--Declare the plugin version explicitly in pom.xml fixing the warning for specific plugin version-->
+            <plugin>
+                <groupId>org.sonarsource.scanner.maven</groupId>
+                <artifactId>sonar-maven-plugin</artifactId>
+                <version>5.1.0.4751</version>
+            </plugin>
+
 <!--            Configure Surefire Plugin (for Unit Tests)-->
             <!-- ✅ Unit Tests Plugin -->
             <plugin>
@@ -137,12 +146,18 @@
                     </execution>
                 </executions>
                 <configuration>
+                <!--Setting Up Directory where test-coverage report will generate-->
                     <outputDirectory>
                         ${project.build.directory}/jacoco-report
                     </outputDirectory>
                     <output>
                         file
                     </output>
+                    <excludes>
+                        <!-- Exclude Spring Boot main class -->
+                        <!-- You can also use wildcards like inside exclude tag **/*Application.class-->
+                        <exclude>com/learncicd/customermgmtjenkins/CustomerMgmtJenkinsApplication.class</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
 

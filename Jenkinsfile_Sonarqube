@@ -105,14 +105,15 @@ pipeline {
     // In SonarQube, configure a Quality Gate , Add a webhook in SonarQube to notify Jenkins of pass/fail status
     // we are gonna get Three minutes timeout and we are gonna wait for quality-gate TO PASS/FAIL and BASED ON QUALITY-GATE if the quality-gates pass/fail . if it comes with failed quality-gate this pipeline is going to abort
     // or if quality-gate comes with pass then pipeline will continue further and succeed
-    // stage("Quality Gate") {
-    //   steps {
-    //     echo 'Quality Gate PASS/FAIL CHECK'
-    //     timeout(time: 3, unit: 'MINUTES') {
-    //       waitForQualityGate abortPipeline: true
-    //     }
-    //   }
-    // }
+    stage("Quality Gate") {
+      steps {
+        echo 'Quality Gate PASS/FAIL CHECK'
+        timeout(time: 5, unit: 'MINUTES') {
+          // waitForQualityGate abortPipeline: true
+          waitForQualityGate abortPipeline: true, credentialsId: 'jenkins-sonarqube-token'
+        }
+      }
+    }
 
 
     // Stage 3: Build Docker Image 
