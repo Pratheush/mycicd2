@@ -222,12 +222,12 @@ pipeline {
                 // sh "trivy image --exit-code 1 --severity HIGH,CRITICAL --no-progress --format template --template "@html.tpl" -o report.html ${env.LATEST_TAG}"
 
                 // sh "trivy image --exit-code 1 --severity HIGH,CRITICAL --no-progress --format template --template \"@html.tpl\" -o \"report-${env.IMAGE_TAG}.html\"  ${env.IMAGE_TAG}"
-                sh "trivy image --exit-code 1 --severity HIGH,CRITICAL --no-progress --format template --template \"@html.tpl\" -o \"report-${env.LATEST_TAG}.html\"  ${env.LATEST_TAG}"
+                sh "trivy image --exit-code 1 --severity HIGH,CRITICAL --no-progress --format template --template \"@html.tpl\" -o report-trivy-docker-image-latest.html  ${env.LATEST_TAG}"
 
                 // Publish Trivy HTML report (for latest tag)
                 publishHTML([
                   reportDir: '.',
-                  reportFiles: "report-${env.LATEST_TAG}.html",
+                  reportFiles: 'report-trivy-docker-image-latest.html',
                   reportName: 'Trivy Security Report'
                 ])
 
