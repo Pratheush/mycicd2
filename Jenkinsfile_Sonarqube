@@ -303,6 +303,12 @@ pipeline {
       // publishCoverage adapters: [jacocoAdapter('target/jacoco-report/jacoco.xml')], sourceFileResolver: sourceFiles('STORE_LAST_BUILD')
       recordCoverage(tools: [[parser: 'JACOCO', pattern: 'target/jacoco-report/jacoco.xml']], sourceDirectories: [[path: 'src/main/java']])
 
+      publishHTML([
+                  reportDir: '.',
+                  reportFiles: 'report-trivy-docker-image-latest.html',
+                  reportName: 'Trivy Security Report'
+                ])
+
       // Archive all Trivy HTML reports 
       // report-${env.IMAGE_TAG}.html,  report-${env.LATEST_TAG}.html
       // archiveArtifacts artifacts: '**/trivy-report*.json', onlyIfSuccessful: true
@@ -324,6 +330,13 @@ pipeline {
       echo '🚀 Docker image successfully built and pushed!'
     }
     failure {
+
+      publishHTML([
+                  reportDir: '.',
+                  reportFiles: 'report-trivy-docker-image-latest.html',
+                  reportName: 'Trivy Security Report'
+                ])  
+
       echo "❌ CI/CD Pipeline failed!"
     }
   }
