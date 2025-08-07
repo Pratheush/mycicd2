@@ -9,6 +9,7 @@ pipeline {
   // If you have a specific label for your Windows 11 machine (e.g., 'windows-agent'),
   // you can use 'agent { label 'windows-agent' }' instead.
   // agent { label 'windows-docker' }
+  // Use a specific agent label for consistency and to ensure the right machine is used.
   agent any
   
   tools {
@@ -19,6 +20,7 @@ pipeline {
   
   // If you don't want Jenkins to do that auto-checkout and only want to rely on your git step, you could set:  skipDefaultCheckout(true)
   // skipDefaultCheckout(false) means: Jenkins will perform the default checkout scm at the start of the pipeline.
+  // Keep this to have full control over the checkout process.
   options {
     skipDefaultCheckout(true)
   }
@@ -50,7 +52,45 @@ pipeline {
       steps {
         echo '📦 Checking out source code...'
         // Checkout the SCM (Source Code Management) configured for this job. This typically points to your GitHub repository.
+        // The git step is correctly configured for a public repo. For a private one, use credentials.
         git branch: 'master', url: 'https://github.com/Pratheush/mycicd2.git'
+      }
+    }
+
+
+    // HERE at this stage Trivy scan means Early detection of vulnerable dependencies before packaging or containerizing
+    // Scan Spring Boot Dependencies with Trivy
+    // Trivy supports scanning Java projects via:
+    // pom.xml (Maven), .jar files(with limitations for SpringBoot fat JARs), local filesystem (trivy fs.)
+    // This scans your project directory, including pom.xml, and flags vulnerable libraries
+    // --vuln-type library FLAG Scans for vulnerabilities in application dependencies (e.g., Maven libraries)
+    // . Target directory — the current working directory (your Spring Boot project root)
+    // trivy fs  will Scans the local filesystem (your source code directory)
+    // It scans Dependency versions and known CVEs and Vulnerabilities in third-party libraries (like Spring, Jackson, Hibernate, etc.) and scans pom.xml and target directory
+    stage('Trivy Scan - Filesystem - Maven Dependencies') {
+      steps {
+        script {
+          echo '🔍 Trivy Scan for Maven Dependencies (Filesystem)...'
+          // sh 'trivy fs . --exit-code 1 --severity HIGH,CRITICAL'
+          // sh 'trivy fs --exit-code 1 --severity HIGH,CRITICAL --vuln-type library .'
+
+          // Download HTML template for Trivy report
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl > html.tpl
+
+          // Run Trivy scan and generate HTML report
+          sh 'trivy fs --exit-code 1 --severity HIGH,CRITICAL --vuln-type library --format template --template "@html.tpl" -o trivy-fs-report.html .'
+
+          // Publish the report to Jenkins UI
+          // 📦 Scans your  and resolved dependencies for known CVEs.
+          // 🧠 Helps catch issues before Docker packaging or deployment.
+          // 📊 Makes results visible in Jenkins under HTML Reports, so you don’t need to dig through logs.
+          publishHTML([
+            reportDir: '.',
+            reportFiles: 'trivy-fs-report.html',
+            reportName: 'Trivy Filesystem Maven Dependency Scan'
+          ])
+
+        }
       }
     }
 
@@ -65,18 +105,19 @@ pipeline {
         // -DskipTests to skip tests during build, remove if you want tests to run
         // bat './mvnw clean package -DskipTests'
         // bat './mvnw clean verify'
-        // bat './mvnw clean package'
+        // sh 'mvn clean package'
         sh 'mvn clean verify'
       }
     }
 
     // Running Unit Tests on SPringBoot Application
-    stage('Test') {
-      steps {
-        echo 'Running Unit Tests SpringBoot Application'
-        sh 'mvn test'
-      }
-    }
+    // Merge BUILD & TEST APP  and TEST stages: Since 'mvn clean verify' already runs tests, the separate 'mvn test' stage may be redundant unless you're isolating test types (e.g., unit vs integration).
+    // stage('Test') {
+    //   steps {
+    //     echo 'Running Unit Tests SpringBoot Application'
+    //     sh 'mvn test'
+    //   }
+    // }
 
     // Running Static Code Analysis Via SonarQube
     stage('SonarQube Analysis') {
@@ -110,6 +151,7 @@ pipeline {
         echo 'Quality Gate PASS/FAIL CHECK'
         timeout(time: 5, unit: 'MINUTES') {
           // waitForQualityGate abortPipeline: true
+          // No need for credentialsId here if already in withSonarQubeEnv
           waitForQualityGate abortPipeline: true, credentialsId: 'jenkins-sonarqube-token'
         }
       }
@@ -127,7 +169,7 @@ pipeline {
         // -t     tags the image with the name from the environment variable and gives it the latest tag
         // Uses multi-tag Docker image (short-commit and latest) — good practice.
         script {
-          echo 'Building Docker image INSIDE SCRIPT SECTION'
+          echo '🐳 Building Docker image INSIDE SCRIPT SECTION'
           def shortCommit = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
           def imageTag    = "${DOCKER_IMAGE_NAME}:${shortCommit}"
           def latestTag   = "${DOCKER_IMAGE_NAME}:latest"
@@ -146,6 +188,50 @@ pipeline {
           echo "✅ Built image: ${env.IMAGE_TAG} and tagged as latest"
         }
       }
+    }
+
+    // THIS WAY IS SCANNING OUR FINAL IMAGE FOR VULNERABILITIES 
+    // - --exit-code 1 will fail the build if vulnerabilities of specified severity are found
+    // - You can add --format json or --template to generate reports. - For HTML reports, use Trivy’s template 
+    // - Use double quotes around @html.tpl inside the shell string to avoid Groovy parsing issues.
+    // when we want to track severity only HIGH and CRITICAL we mention severity with --severity flag. flags like low/medium/high/critical etc so here we are ignoring all severity less than high.
+    // --no-progress flag will suppress the progress in the console-output log.
+    // --exit-code 1 means that if trivy finds anything in built docker image with any vulnerability i.e. in a case of High/Critical severity then return as failure.by default exit-code is always zero or 0
+    // so in case of failure i.e. vulnerability found with severity of HIGH/CRITICAL then return the exit-code 1 and thus the job will fail.
+    // --format template --template -o *.html flag is saving the result of Trivy scanning into the html file using format-template into the template of html.tpl. format Table is (default)
+    // --image flag tells to trivy-scan the docker-image
+    // --exit-code 1   # Exit with code 1 if vulnerabilities found
+    // --severity HIGH,CRITICAL   # Only scan/report high severity issues
+    stage('Trivy Scan - Docker Image') {
+            steps {
+              script {
+                echo '🔍 Trivy Scan Docker Image Built For Vulnerabilities...with severity of HIGH/CRITICAL'
+
+                // Option 2: Docker (uncomment if using containerized Trivy)
+                // sh 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity HIGH,CRITICAL $FULL_IMAGE'
+
+                curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl > html.tpl
+                //trivy image --format template --template "@html.tpl" -o report.html $IMAGE_NAME
+
+
+                //sh "trivy image --exit-code 1 --severity HIGH,CRITICAL --no-progress ${env.IMAGE_TAG}"
+                //sh "trivy image --exit-code 1 --severity HIGH,CRITICAL --no-progress ${env.LATEST_TAG}"
+
+                // sh "trivy image --exit-code 1 --severity HIGH,CRITICAL --no-progress --format template --template "@html.tpl" -o report.html ${env.IMAGE_TAG}"
+                // sh "trivy image --exit-code 1 --severity HIGH,CRITICAL --no-progress --format template --template "@html.tpl" -o report.html ${env.LATEST_TAG}"
+
+                // sh "trivy image --exit-code 1 --severity HIGH,CRITICAL --no-progress --format template --template \"@html.tpl\" -o \"report-${env.IMAGE_TAG}.html\"  ${env.IMAGE_TAG}"
+                sh "trivy image --exit-code 1 --severity HIGH,CRITICAL --no-progress --format template --template \"@html.tpl\" -o \"report-${env.LATEST_TAG}.html\"  ${env.LATEST_TAG}"
+
+                // Publish Trivy HTML report (for latest tag)
+                publishHTML([
+                  reportDir: '.',
+                  reportFiles: "report-${env.LATEST_TAG}.html",
+                  reportName: 'Trivy Security Report'
+                ])
+
+                }
+            }
     }
     
     // This defines a named pipeline stage that focuses on pushing a built Docker image to DockerHub.
@@ -203,14 +289,25 @@ pipeline {
   // Uses cleanWs() in post block — clean workspace ensures clean builds
   // cleanWs() is a predefined method provided by the Workspace Cleanup Plugin in Jenkins. It’s specifically designed for use in Declarative Pipelines, and you’re using it perfectly in the post section to clean up the workspace after every build.
   // Define post-build actions, e.g., send notifications. 
+  // Plugin Name: Pipeline: Basic Steps
+  // Functionality Provided: archiveArtifacts, deleteDir, stash, unstash, and other essential pipeline steps
   post {
     always {
-
+      // Archive JUnit test reports  
       junit '**/surefire-reports/*.xml, **/failsafe-reports/*.xml'
+
+      // Record Jacoco coverage reports
       // jacoco() is not available method since jacoco plugin is not installed in jenkins as jacoco plugin is depracted
-      //recordCoverage tools: [jacoco()]
+      // recordCoverage tools: [jacoco()]
       // publishCoverage adapters: [jacocoAdapter('target/jacoco-report/jacoco.xml')], sourceFileResolver: sourceFiles('STORE_LAST_BUILD')
       recordCoverage(tools: [[parser: 'JACOCO', pattern: 'target/jacoco-report/jacoco.xml']], sourceDirectories: [[path: 'src/main/java']])
+
+      // Archive all Trivy HTML reports 
+      // report-${env.IMAGE_TAG}.html,  report-${env.LATEST_TAG}.html
+      // archiveArtifacts artifacts: '**/trivy-report*.json', onlyIfSuccessful: true
+      // archiveArtifacts artifacts: '**/report-${env.IMAGE_TAG}.html', onlyIfSuccessful: true
+      // archiveArtifacts artifacts: '**/report-${env.LATEST_TAG}.html', onlyIfSuccessful: true
+      archiveArtifacts artifacts: '**/report-*.html', onlyIfSuccessful: true
 
       echo "🏁 Cleaning Workspace."
       cleanWs()
