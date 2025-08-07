@@ -67,18 +67,19 @@ pipeline {
     // . Target directory — the current working directory (your Spring Boot project root)
     // trivy fs  will Scans the local filesystem (your source code directory)
     // It scans Dependency versions and known CVEs and Vulnerabilities in third-party libraries (like Spring, Jackson, Hibernate, etc.) and scans pom.xml and target directory
+    // WARN	'--vuln-type' is deprecated. Use '--pkg-types' instead.
     stage('Trivy Scan - Filesystem - Maven Dependencies') {
       steps {
         script {
           echo "🔍 Trivy Scan for Maven Dependencies (Filesystem)..."
-          // sh 'trivy fs . --exit-code 1 --severity HIGH,CRITICAL'
-          // sh 'trivy fs --exit-code 1 --severity HIGH,CRITICAL --vuln-type library .'
+          // sh 'trivy fs . --exit-code 1 --severity HIGH,CRITICAL --no-progress'
+          // sh 'trivy fs --exit-code 1 --severity HIGH,CRITICAL --no-progress --vuln-type library .'
 
           // Download HTML template for Trivy report
           sh "curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl > html.tpl"
 
           // Run Trivy scan and generate HTML report
-          sh "trivy fs --exit-code 1 --severity HIGH,CRITICAL --vuln-type library --format template --template \"@html.tpl\" -o trivy-fs-report.html ."
+          sh "trivy fs --exit-code 1 --severity HIGH,CRITICAL --no-progress --pkg-types library --format template --template \"@html.tpl\" -o trivy-fs-report.html ."
 
           // Publish the report to Jenkins UI
           // 📦 Scans your  and resolved dependencies for known CVEs.
