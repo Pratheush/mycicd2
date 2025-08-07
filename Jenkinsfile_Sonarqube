@@ -79,7 +79,7 @@ pipeline {
           sh "curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl > html.tpl"
 
           // Run Trivy scan and generate HTML report
-          sh "trivy fs --exit-code 1 --severity HIGH,CRITICAL --no-progress --pkg-types library --format template --template \"@html.tpl\" -o trivy-fs-report.html ."
+          sh "trivy fs --exit-code 1 --severity HIGH,CRITICAL --no-progress --pkg-types library --format template --template \"@html.tpl\" -o report-trivy-fs.html ."
 
           // Publish the report to Jenkins UI
           // 📦 Scans your  and resolved dependencies for known CVEs.
@@ -87,7 +87,7 @@ pipeline {
           // 📊 Makes results visible in Jenkins under HTML Reports, so you don’t need to dig through logs.
           publishHTML([
             reportDir: '.',
-            reportFiles: 'trivy-fs-report.html',
+            reportFiles: 'report-trivy-fs.html',
             reportName: 'Trivy Filesystem Maven Dependency Scan'
           ])
 
@@ -303,18 +303,12 @@ pipeline {
       // publishCoverage adapters: [jacocoAdapter('target/jacoco-report/jacoco.xml')], sourceFileResolver: sourceFiles('STORE_LAST_BUILD')
       recordCoverage(tools: [[parser: 'JACOCO', pattern: 'target/jacoco-report/jacoco.xml']], sourceDirectories: [[path: 'src/main/java']])
 
-      publishHTML([
-                  reportDir: '.',
-                  reportFiles: 'report-trivy-docker-image-latest.html',
-                  reportName: 'Trivy Security Report'
-                ])
-
       // Archive all Trivy HTML reports 
       // report-${env.IMAGE_TAG}.html,  report-${env.LATEST_TAG}.html
       // archiveArtifacts artifacts: '**/trivy-report*.json', onlyIfSuccessful: true
       // archiveArtifacts artifacts: '**/report-${env.IMAGE_TAG}.html', onlyIfSuccessful: true
       // archiveArtifacts artifacts: '**/report-${env.LATEST_TAG}.html', onlyIfSuccessful: true
-      archiveArtifacts artifacts: '**/report-*.html', onlyIfSuccessful: true
+      archiveArtifacts artifacts: 'report-*.html', onlyIfSuccessful: false
 
       echo "🏁 Cleaning Workspace."
       cleanWs()
@@ -330,13 +324,6 @@ pipeline {
       echo '🚀 Docker image successfully built and pushed!'
     }
     failure {
-
-      publishHTML([
-                  reportDir: '.',
-                  reportFiles: 'report-trivy-docker-image-latest.html',
-                  reportName: 'Trivy Security Report'
-                ])  
-
       echo "❌ CI/CD Pipeline failed!"
     }
   }
