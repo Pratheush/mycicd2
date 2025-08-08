@@ -9,6 +9,7 @@ pipeline {
   // If you have a specific label for your Windows 11 machine (e.g., 'windows-agent'),
   // you can use 'agent { label 'windows-agent' }' instead.
   // agent { label 'windows-docker' }
+  // agent { label 'linux' }
   // Use a specific agent label for consistency and to ensure the right machine is used.
   agent any
   
@@ -23,6 +24,7 @@ pipeline {
   // Keep this to have full control over the checkout process.
   options {
     skipDefaultCheckout(true)
+    // buildDiscarder(logRotator(numToKeepStr: '5'))
   }
 
   // Define environment variables.
