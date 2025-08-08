@@ -90,7 +90,7 @@ pipeline {
           publishHTML([
             reportDir: '.',
             reportFiles: 'report-trivy-fs.html',
-            reportName: 'Trivy Filesystem Maven Dependency Scan'
+            reportName: 'Trivy Filesystem Maven Dependency Scan Security-Report'
           ])
 
         }
@@ -230,7 +230,7 @@ pipeline {
                 publishHTML([
                   reportDir: '.',
                   reportFiles: 'report-trivy-docker-image-latest.html',
-                  reportName: 'Trivy Security Report'
+                  reportName: 'Trivy Final DockerImage Scan Security-Report'
                 ])
 
                 }
